@@ -13,10 +13,10 @@ from app.models.audit_log import AuditLog
 
 # Import routers
 from app.routers.environment import router as environment_router
+from app.routers.flags import router as flag_router
 
 app = FastAPI()
 
-# Allow React frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
@@ -25,17 +25,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Create all database tables
 Base.metadata.create_all(bind=engine)
 
 # Register routers
 app.include_router(environment_router)
-
+app.include_router(flag_router)
 
 @app.get("/")
 def home():
     return {"message": "Feature Flag System Backend Running"}
-
 
 @app.get("/health")
 def health_check():

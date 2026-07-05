@@ -8,4 +8,10 @@ class Flag(Base):
     id = Column(Integer, primary_key=True, index=True)
     flag_key = Column(String(100), unique=True, nullable=False, index=True)
     environment_id = Column(Integer, ForeignKey("environments.id"), nullable=False, index=True)
+
+    type = Column(String(20), nullable=False)          # boolean/string/number
+    default_value = Column(String(255), nullable=False)
+    description = Column(String(255))
+    owner_team = Column(String(100))
+
     enabled = Column(Boolean, default=False)
