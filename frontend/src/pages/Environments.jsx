@@ -20,7 +20,6 @@ function Environments() {
   return (
     <div style={{ padding: "20px" }}>
       <h1>Environment Switcher</h1>
-
       <label>Select Environment:</label>
       <br />
       <br />
