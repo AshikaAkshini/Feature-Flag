@@ -158,6 +158,7 @@ fetch("http://127.0.0.1:8000/environments/")
           <tr>
             <th>Key</th>
             <th>Type</th>
+            <th>Environment</th>
             <th>Status</th>
             <th>Owner</th>
             <th>Action</th>
@@ -179,11 +180,30 @@ fetch("http://127.0.0.1:8000/environments/")
                 <td>{flag.flag_key}</td>
                 <td>{flag.type}</td>
                 <td>
-                  <span className={flag.enabled ? "enabled" : "disabled"}>
-                    {flag.enabled ? "Enabled" : "Disabled"}
-                  </span>
-                </td>
-                <td>{flag.owner_team}</td>
+  <span
+    className={`env-badge ${
+      flag.environment_id === 1
+        ? "development"
+        : flag.environment_id === 2
+        ? "staging"
+        : "production"
+    }`}
+  >
+    {flag.environment_id === 1
+      ? "Development"
+      : flag.environment_id === 2
+      ? "Staging"
+      : "Production"}
+  </span>
+</td>
+
+<td>
+  <span className={flag.enabled ? "enabled" : "disabled"}>
+    {flag.enabled ? "Enabled" : "Disabled"}
+  </span>
+</td>
+
+<td>{flag.owner_team}</td>
                 <td>
                   <div className="action-box">
                    
@@ -403,7 +423,11 @@ selectedFlag.environment_id===1
             <p><strong>Default Value:</strong> {selectedFlag.default_value.toString()}</p>
             <p><strong>Description:</strong> {selectedFlag.description}</p>
             <p><strong>Owner Team:</strong> {selectedFlag.owner_team}</p>
+            <p><strong>Created At:</strong>{" "}{new Date(selectedFlag.created_at).toLocaleString()}</p>
+
+            <p><strong>Updated At:</strong>{" "}{new Date(selectedFlag.updated_at).toLocaleString()}</p>
             <p><strong>Enabled:</strong> {selectedFlag.enabled ? "Yes" : "No"}</p>
+            
             <button className="save-btn" onClick={() => setShowReadModal(false)}>
               <div className="targeting-placeholder">
     <h3>Targeting Rules</h3>
