@@ -1,44 +1,96 @@
-import React from "react";
+import React, {useEffect,useState} from "react";
+import {getFlags} from "../api/FlagApi";
+import ActionDropdown from "./ActionDropdown";
 
-const flags = [
-  {
-    flag_key: "new_dashboard",
-    type: "boolean",
-    enabled: true,
-    owner_team: "Frontend",
-  },
-  {
-    flag_key: "payment_v2",
-    type: "boolean",
-    enabled: false,
-    owner_team: "Backend",
-  },
-];
 
-function FlagTable() {
-  return (
-    <table border="1">
-      <thead>
-        <tr>
-          <th>Key</th>
-          <th>Type</th>
-          <th>Enabled</th>
-          <th>Owner Team</th>
-        </tr>
-      </thead>
+function FlagTable(){
 
-      <tbody>
-        {flags.map((flag) => (
-          <tr key={flag.flag_key}>
-            <td>{flag.flag_key}</td>
-            <td>{flag.type}</td>
-            <td>{flag.enabled ? "Yes" : "No"}</td>
-            <td>{flag.owner_team}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
+const [flags,setFlags]=useState([]);
+
+
+const loadFlags=async()=>{
+
+    const data=await getFlags();
+    setFlags(data);
+
+};
+
+
+useEffect(()=>{
+
+    loadFlags();
+
+},[]);
+
+
+
+return(
+
+<div className="table-container">
+
+
+<table>
+
+<thead>
+
+<tr>
+<th>Key</th>
+<th>Type</th>
+<th>Status</th>
+<th>Owner Team</th>
+<th>Action</th>
+</tr>
+
+</thead>
+
+
+<tbody>
+
+{
+flags.map(flag=>(
+
+<tr key={flag.id}>
+
+<td>{flag.key}</td>
+
+<td>{flag.type}</td>
+
+<td>
+{flag.enabled ? "Enabled":"Disabled"}</td>
+
+
+<td>
+{flag.owner_team}
+</td>
+
+
+<td>
+
+<ActionDropdown flag={flag}/>
+
+</td>
+
+
+</tr>
+
+))
+
 }
+
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+
+);
+
+
+}
+
 
 export default FlagTable;

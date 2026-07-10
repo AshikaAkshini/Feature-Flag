@@ -1,0 +1,191 @@
+.flags-container{
+    background:white;
+    padding:30px;
+    border-radius:12px;
+    box-shadow:0 4px 15px rgba(0,0,0,.1);
+}
+
+.flags-title{
+    font-size:34px;
+    margin-bottom:20px;
+    color:#1f2937;
+}
+
+.search-box{
+    width:320px;
+    padding:10px 15px;
+    margin-bottom:20px;
+    border:2px solid #d1d5db;
+    border-radius:8px;
+    font-size:16px;
+}
+
+.flags-table{
+    width:100%;
+    border-collapse:collapse;
+    overflow:hidden;
+    border-radius:10px;
+}
+
+.flags-table thead{
+    background:#2563eb;
+    color:white;
+}
+
+.flags-table th{
+    padding:16px;
+    text-align:left;
+}
+
+.flags-table td{
+    padding:15px;
+    border-bottom:1px solid #e5e7eb;
+}
+
+.flags-table tbody tr:hover{
+    background:#f3f4f6;
+}
+
+.enabled{
+    color:green;
+    font-weight:bold;
+}
+
+.disabled{
+    color:red;
+    font-weight:bold;
+}
+
+.delete-btn{
+    background:#dc2626;
+    color:white;
+    border:none;
+    padding:8px 15px;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.delete-btn:hover{
+    background:#b91c1c;
+}
+
+.action-btn{
+    background:#2563eb;
+    color:white;
+    border:none;
+    padding:8px 14px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:14px;
+}
+
+.action-btn:hover{
+    background:#1d4ed8;
+}
+
+.dropdown-menu{
+    position:absolute;
+    top:40px;
+    right:0;
+    width:170px;
+    background:white;
+    border-radius:8px;
+    box-shadow:0 5px 15px rgba(0,0,0,.2);
+    z-index:100;
+}
+
+.dropdown-item{
+    padding:12px;
+    cursor:pointer;
+    border-bottom:1px solid #eee;
+}
+
+.dropdown-item:hover{
+    background:#f3f4f6;
+}
+
+.delete-item{
+    color:red;
+    font-weight:bold;
+}
+
+.modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.5);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:999;
+}
+
+.modal{
+    width:450px;
+    background:white;
+    padding:25px;
+    border-radius:12px;
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+}
+
+.modal input,
+.modal textarea,
+.modal select{
+    padding:10px;
+    border:1px solid #ccc;
+    border-radius:6px;
+    font-size:15px;
+}
+
+.modal textarea{
+    height:90px;
+    resize:none;
+}
+
+.modal-buttons{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+}
+
+.cancel-btn{
+    background:#6b7280;
+    color:white;
+    border:none;
+    padding:10px 18px;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.save-btn{
+    background:#2563eb;
+    color:white;
+    border:none;
+    padding:10px 18px;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.save-btn:hover{
+    background:#1d4ed8;
+}
+
+.detail-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin:15px 0;
+    padding-bottom:10px;
+    border-bottom:1px solid #e5e7eb;
+}
+
+.detail-row strong{
+    width:130px;
+    color:#1f2937;
+}
+
+.detail-row span{
+    flex:1;
+    color:#4b5563;
+}

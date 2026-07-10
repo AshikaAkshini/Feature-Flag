@@ -4,6 +4,8 @@ import Navbar from "./components/Navbar";
 import Flags from "./pages/Flags";
 import Environments from "./pages/Environments";
 import AuditLog from "./pages/AuditLog";
+import FlagDetail from "./pages/FlagDetail";
+
 
 import "./App.css";
 
@@ -27,6 +29,7 @@ function App() {
               <Route path="/flags" element={<Flags />} />
               <Route path="/environments" element={<Environments />} />
               <Route path="/audit" element={<AuditLog />} />
+              <Route path="/flags/:flag_key" element={<FlagDetail />} />
             </Routes>
 
           </div>
