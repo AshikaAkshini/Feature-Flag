@@ -14,6 +14,9 @@ from app.models.audit_log import AuditLog
 # Import routers
 from app.routers.environment import router as environment_router
 from app.routers.flags import router as flag_router
+from app.routers import evaluate
+
+
 
 app = FastAPI()
 
@@ -30,6 +33,7 @@ Base.metadata.create_all(bind=engine)
 # Register routers
 app.include_router(environment_router)
 app.include_router(flag_router)
+app.include_router(evaluate.router)
 
 @app.get("/")
 def home():

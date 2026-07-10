@@ -38,3 +38,16 @@ def update_flag(db: Session, key: str, flag: FlagUpdate):
 
     return db_flag
 
+
+def delete_flag(db: Session, flag_key: str):
+    # Find the flag using flag_key
+    db_flag = db.query(Flag).filter(Flag.flag_key == flag_key).first()
+
+    if not db_flag:
+        return None
+
+    # Delete the flag
+    db.delete(db_flag)
+    db.commit()
+
+    return db_flag

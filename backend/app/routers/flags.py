@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.flag import FlagCreate, FlagUpdate, FlagResponse
 from app.crud.flag import create_flag, get_flags, get_flag, update_flag
+from app.crud.flag import delete_flag
 
 router = APIRouter(prefix="/flags", tags=["Flags"])
 
@@ -36,3 +37,20 @@ def update(key: str, flag: FlagUpdate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Flag not found")
 
     return updated
+
+from fastapi import HTTPException
+
+@router.delete("/{flag_key}")
+def remove_flag(flag_key: str, db: Session = Depends(get_db)):
+    deleted_flag = delete_flag(db, flag_key)
+
+    if deleted_flag is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Flag not found"
+        )
+
+    return {
+        "message": "Flag deleted successfully",
+        "flag_key": flag_key
+    }

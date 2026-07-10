@@ -4,8 +4,8 @@ from pydantic import BaseModel
 class FlagBase(BaseModel):
     flag_key: str
     environment_id: int
-    type: str
-    default_value: str
+    type: str = "boolean"
+    default_value: bool
     description: str | None = None
     owner_team: str | None = None
     enabled: bool = False
