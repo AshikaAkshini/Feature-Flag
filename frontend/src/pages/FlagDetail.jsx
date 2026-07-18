@@ -1,15 +1,25 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getFlagById } from "../api/FlagApi";
+import { getGroups, getFlagGroups, assignGroup } from "../api/GroupApi";
 
 function FlagDetail() {
   const { flag_key } = useParams();
   const [flag, setFlag] = useState(null);
+  const [groups, setGroups] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState("");
+  const [assignedGroups, setAssignedGroups] = useState([]);
 
   useEffect(() => {
     getFlagById(flag_key)
-      .then((data) => setFlag(data))
-      .catch((err) => console.error(err));
+  .then((data) => {
+    setFlag(data);
+
+    getFlagGroups(data.id)
+      .then(setAssignedGroups)
+      .catch(console.error);
+  })
+  .catch(console.error);
   }, [flag_key]);
 
   if (!flag) {
@@ -40,9 +50,7 @@ function FlagDetail() {
   {new Date(flag.updated_at).toLocaleString()}
 </p>
       <hr />
-
-      <h3>Targeting Rules</h3>
-      <p>Coming in Milestone 2...</p>
+        
     </div>
   );
 }

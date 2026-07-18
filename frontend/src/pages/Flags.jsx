@@ -14,11 +14,50 @@ function Flags() {
   const navigate = useNavigate();
   const [targetUsers, setTargetUsers] = useState([]);
   const [newUserId, setNewUserId] = useState("");
-
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState("");
-
   const [flagGroups, setFlagGroups] = useState([]);
+
+  const loadGroups = async () => {
+  try {
+    const res = await fetch("http://127.0.0.1:8000/groups/");
+    const data = await res.json();
+    setGroups(data);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+
+const loadFlagGroups = async (flagId) => {
+  try {
+    const res = await fetch(
+      `http://127.0.0.1:8000/flag-groups/${flagId}`
+    );
+
+    const data = await res.json();
+
+    setFlagGroups(data);
+
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const loadTargetUsers = async (flagId) => {
+  try {
+    const res = await fetch(
+      `http://127.0.0.1:8000/target-users/${flagId}`
+    );
+
+    const data = await res.json();
+
+    setTargetUsers(data);
+
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   const [newFlag, setNewFlag] = useState({
     flag_key: "",
@@ -37,23 +76,6 @@ function Flags() {
       .catch((err) => console.error(err));
   };
 
-  const loadTargetUsers = async (flagId) => {
-  const res = await fetch(`http://127.0.0.1:8000/target-users/${flagId}`);
-  const data = await res.json();
-  setTargetUsers(data);
-};
-
-const loadGroups = async () => {
-  const res = await fetch("http://127.0.0.1:8000/groups/");
-  const data = await res.json();
-  setGroups(data);
-};
-
-const loadFlagGroups = async (flagId) => {
-  const res = await fetch(`http://127.0.0.1:8000/flag-groups/${flagId}`);
-  const data = await res.json();
-  setFlagGroups(data);
-};
   useEffect(() => {
 
 loadFlags();
@@ -103,63 +125,100 @@ fetch("http://127.0.0.1:8000/environments/")
 
   loadTargetUsers(flag.id);
   loadGroups();
-  loadFlagGroups(flag.id);
+
+loadFlagGroups(flag.id);
 };
 
 const addTargetUser = async () => {
-  if (!newUserId) return;
 
-  const response = await fetch("http://127.0.0.1:8000/target-users/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      flag_id: selectedFlag.id,
-      user_id: newUserId,
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    alert(error.detail);
+  if (newUserId.trim() === "") {
+    alert("Enter User ID");
     return;
   }
 
-  setNewUserId("");
-  loadTargetUsers(selectedFlag.id);
+  try {
+
+    await fetch("http://127.0.0.1:8000/target-users/", {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+
+        flag_id: selectedFlag.id,
+        user_id: newUserId,
+
+      }),
+
+    });
+
+    setNewUserId("");
+
+    loadTargetUsers(selectedFlag.id);
+
+  } catch (err) {
+    console.log(err);
+  }
+
 };
 
 const deleteTargetUser = async (id) => {
-  await fetch(`http://127.0.0.1:8000/target-users/${id}`, {
-    method: "DELETE",
-  });
 
-  loadTargetUsers(selectedFlag.id);
+  try {
+
+    await fetch(`http://127.0.0.1:8000/target-users/${id}`, {
+
+      method: "DELETE",
+
+    });
+
+    loadTargetUsers(selectedFlag.id);
+
+  } catch (err) {
+    console.log(err);
+  }
+
 };
 
 const addGroup = async () => {
-  if (!selectedGroup) return;
 
-  const response = await fetch("http://127.0.0.1:8000/flag-groups/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      flag_id: selectedFlag.id,
-      group_id: Number(selectedGroup),
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    alert(error.detail);
+  if (!selectedGroup) {
+    alert("Select a group");
     return;
   }
 
-  setSelectedGroup("");
-  loadFlagGroups(selectedFlag.id);
+  try {
+
+    const response = await fetch(
+      "http://127.0.0.1:8000/flag-groups/",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          flag_id: selectedFlag.id,
+          group_id: Number(selectedGroup),
+        }),
+      }
+    );
+
+    // Check for backend errors
+    if (!response.ok) {
+      const error = await response.json();
+      alert(error.detail);
+      return;
+    }
+
+    setSelectedGroup("");
+    loadFlagGroups(selectedFlag.id);
+
+  } catch (err) {
+    console.log(err);
+  }
 };
 
   const handleUpdate = (flag) => {
@@ -218,8 +277,6 @@ const addGroup = async () => {
     }
   };
 
-  
-
   return (
     <div>
       <h2>Feature Flags</h2>
@@ -234,9 +291,7 @@ const addGroup = async () => {
           placeholder="🔍 Search Flag..."
           className="search-box"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          
-        />
+          onChange={(e) => setSearch(e.target.value)}/>
       </div>
 
       <table>
@@ -488,95 +543,149 @@ type:e.target.value
       )}
 
       {/* READ MODAL */}
-      {showReadModal && selectedFlag && (
-        <div className="modal">
-          <div className="modal-content">
-            <h2>Feature Flag Details</h2>
-            <p><strong>Key:</strong> {selectedFlag.flag_key}</p>
-            <p>
-<strong>Environment:</strong>
+{showReadModal && selectedFlag && (
+  <div className="modal">
+    <div className="modal-content">
 
-{
-selectedFlag.environment_id===1
-?"Development"
-:selectedFlag.environment_id===2
-?"Staging"
-:"Production"
-}
+      <h2>Feature Flag Details</h2>
 
-</p>
-            <p><strong>Type:</strong> {selectedFlag.type}</p>
-            <p><strong>Default Value:</strong> {selectedFlag.default_value.toString()}</p>
-            <p><strong>Description:</strong> {selectedFlag.description}</p>
-            <p><strong>Owner Team:</strong> {selectedFlag.owner_team}</p>
-            <p><strong>Created At:</strong>{" "}{new Date(selectedFlag.created_at).toLocaleString()}</p>
+      <p><strong>Key:</strong> {selectedFlag.flag_key}</p>
 
-            <p><strong>Updated At:</strong>{" "}{new Date(selectedFlag.updated_at).toLocaleString()}</p>
-            <p><strong>Enabled:</strong> {selectedFlag.enabled ? "Yes" : "No"}</p>
-            <hr />
+      <p>
+        <strong>Environment:</strong>{" "}
+        {selectedFlag.environment_id === 1
+          ? "Development"
+          : selectedFlag.environment_id === 2
+          ? "Staging"
+          : "Production"}
+      </p>
+
+      <p><strong>Type:</strong> {selectedFlag.type}</p>
+      <p><strong>Default Value:</strong> {selectedFlag.default_value.toString()}</p>
+      <p><strong>Description:</strong> {selectedFlag.description}</p>
+      <p><strong>Owner Team:</strong> {selectedFlag.owner_team}</p>
+      <p><strong>Created At:</strong> {new Date(selectedFlag.created_at).toLocaleString()}</p>
+      <p><strong>Updated At:</strong> {new Date(selectedFlag.updated_at).toLocaleString()}</p>
+      <p><strong>Enabled:</strong> {selectedFlag.enabled ? "Yes" : "No"}</p>
+
+      <hr />
 
 <h3>User Targeting Rules</h3>
 
-<input
-  type="text"
-  placeholder="Enter User ID"
-  value={newUserId}
-  onChange={(e) => setNewUserId(e.target.value)}
-/>
+<div className="target-panel">
 
-<button onClick={addTargetUser}>
-  Add
-</button>
+<div className="target-input-row">
 
-{targetUsers.map((user) => (
-  <div key={user.id}>
-    {user.user_id}
+  <input
+    type="text"
+    placeholder="Enter User ID"
+    value={newUserId}
+    onChange={(e) => setNewUserId(e.target.value)}
+  />
 
-    <button onClick={() => deleteTargetUser(user.id)}>
-      ✖
-    </button>
-  </div>
-))}
+  <button
+    className="add-user-btn"
+    onClick={addTargetUser}
+  >
+    Add
+  </button>
 
-<hr />
+</div>
+{targetUsers.length===0 ? (
 
-<h3>Group Targeting</h3>
+<p>No Target Users</p>) : 
+(targetUsers.map((user)=>(
 
-<select
-  value={selectedGroup}
-  onChange={(e) => setSelectedGroup(e.target.value)}
+<div
+key={user.id}
+className="target-user-row"
 >
-  <option value="">Select Group</option>
 
-  {groups.map((group) => (
-    <option key={group.id} value={group.id}>
-      {group.name}
-    </option>
-  ))}
-</select>
-
-<button onClick={addGroup}>
-  Add
-</button>
-
-{flagGroups.map((group) => (
-  <div key={group.id}>
-    {group.group_name ?? group.group_id}
-  </div>
-))}
-
-<hr />
+<span>{user.user_id}</span>
 
 <button
-  className="save-btn"
-  onClick={() => setShowReadModal(false)}
+className="remove-btn"
+onClick={()=>deleteTargetUser(user.id)}
 >
-  Close
+❌
 </button>
-            
-          </div>
-        </div>
-      )}
+</div>
+)))}
+</div><hr />
+<h3>Group Targeting</h3>
+
+<div className="target-panel">
+
+  <div className="target-input-row">
+
+    <select
+      value={selectedGroup}
+      onChange={(e) => setSelectedGroup(e.target.value)}
+    >
+
+      <option value="">Select Group</option>
+
+      {groups.map((group) => (
+
+        <option
+          key={group.id}
+          value={group.id}
+        >
+          {group.name}
+        </option>
+
+      ))}
+
+    </select>
+
+    <button
+      className="add-user-btn"
+      onClick={addGroup}
+    >
+      Add
+    </button>
+
+  </div>
+
+  {flagGroups.length === 0 ? (
+
+    <p>No Groups Assigned</p>
+
+  ) : (
+
+    flagGroups.map((group) => (
+
+      <div
+        key={group.id}
+        className="target-user-row"
+      >
+
+        <span>
+  {groups.find(g => g.id === group.group_id)?.name}
+</span>
+
+      </div>
+
+    ))
+
+  )}
+
+</div>
+
+<hr />
+
+
+      <button
+    className="save-btn"
+    style={{ width: "100%", marginTop: "20px" }}
+    onClick={() => setShowReadModal(false)}
+>
+    Close
+</button>
+
+    </div>
+  </div>
+)}
 
       {/* UPDATE MODAL */}
 {showUpdateModal && (
