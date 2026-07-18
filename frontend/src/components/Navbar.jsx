@@ -14,6 +14,9 @@ function Navbar() {
       <Link to="/audit" className="nav-item">
         🔘 Audit Log
       </Link>
+      <Link to="/settings" className="nav-item">
+        🔘 Teams
+      </Link>
 
       <Link to="/settings" className="nav-item">
         🔘 Settings

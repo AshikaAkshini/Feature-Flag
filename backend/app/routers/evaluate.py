@@ -8,7 +8,10 @@ from app.schemas.evaluation import (
     EvaluationResponse,
 )
 
-router = APIRouter(prefix="/evaluate", tags=["Evaluation"])
+router = APIRouter(
+    prefix="/evaluate",
+    tags=["Evaluation"],
+)
 
 
 @router.post("/", response_model=EvaluationResponse)
@@ -16,10 +19,8 @@ def evaluate(
     request: EvaluationRequest,
     db: Session = Depends(get_db),
 ):
-    # Create an empty user context
     user_context = {}
 
-    # Add user_id only if it is provided
     if request.user_id is not None:
         user_context["user_id"] = request.user_id
 

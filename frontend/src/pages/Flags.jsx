@@ -12,6 +12,13 @@ function Flags() {
   const [selectedFlag, setSelectedFlag] = useState(null);
   const [environments, setEnvironments] = useState([]);
   const navigate = useNavigate();
+  const [targetUsers, setTargetUsers] = useState([]);
+  const [newUserId, setNewUserId] = useState("");
+
+  const [groups, setGroups] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState("");
+
+  const [flagGroups, setFlagGroups] = useState([]);
 
   const [newFlag, setNewFlag] = useState({
     flag_key: "",
@@ -30,6 +37,23 @@ function Flags() {
       .catch((err) => console.error(err));
   };
 
+  const loadTargetUsers = async (flagId) => {
+  const res = await fetch(`http://127.0.0.1:8000/target-users/${flagId}`);
+  const data = await res.json();
+  setTargetUsers(data);
+};
+
+const loadGroups = async () => {
+  const res = await fetch("http://127.0.0.1:8000/groups/");
+  const data = await res.json();
+  setGroups(data);
+};
+
+const loadFlagGroups = async (flagId) => {
+  const res = await fetch(`http://127.0.0.1:8000/flag-groups/${flagId}`);
+  const data = await res.json();
+  setFlagGroups(data);
+};
   useEffect(() => {
 
 loadFlags();
@@ -73,10 +97,70 @@ fetch("http://127.0.0.1:8000/environments/")
   };
 
   const handleRead = (flag) => {
-    setSelectedFlag(flag);
-    setShowReadModal(true);
-    setOpenDropdown(null);
-  };
+  setSelectedFlag(flag);
+  setShowReadModal(true);
+  setOpenDropdown(null);
+
+  loadTargetUsers(flag.id);
+  loadGroups();
+  loadFlagGroups(flag.id);
+};
+
+const addTargetUser = async () => {
+  if (!newUserId) return;
+
+  const response = await fetch("http://127.0.0.1:8000/target-users/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      flag_id: selectedFlag.id,
+      user_id: newUserId,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    alert(error.detail);
+    return;
+  }
+
+  setNewUserId("");
+  loadTargetUsers(selectedFlag.id);
+};
+
+const deleteTargetUser = async (id) => {
+  await fetch(`http://127.0.0.1:8000/target-users/${id}`, {
+    method: "DELETE",
+  });
+
+  loadTargetUsers(selectedFlag.id);
+};
+
+const addGroup = async () => {
+  if (!selectedGroup) return;
+
+  const response = await fetch("http://127.0.0.1:8000/flag-groups/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      flag_id: selectedFlag.id,
+      group_id: Number(selectedGroup),
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    alert(error.detail);
+    return;
+  }
+
+  setSelectedGroup("");
+  loadFlagGroups(selectedFlag.id);
+};
 
   const handleUpdate = (flag) => {
   setSelectedFlag(flag);      // Store original flag
@@ -133,6 +217,8 @@ fetch("http://127.0.0.1:8000/environments/")
       console.error(err);
     }
   };
+
+  
 
   return (
     <div>
@@ -427,18 +513,67 @@ selectedFlag.environment_id===1
 
             <p><strong>Updated At:</strong>{" "}{new Date(selectedFlag.updated_at).toLocaleString()}</p>
             <p><strong>Enabled:</strong> {selectedFlag.enabled ? "Yes" : "No"}</p>
+            <hr />
+
+<h3>User Targeting Rules</h3>
+
+<input
+  type="text"
+  placeholder="Enter User ID"
+  value={newUserId}
+  onChange={(e) => setNewUserId(e.target.value)}
+/>
+
+<button onClick={addTargetUser}>
+  Add
+</button>
+
+{targetUsers.map((user) => (
+  <div key={user.id}>
+    {user.user_id}
+
+    <button onClick={() => deleteTargetUser(user.id)}>
+      ✖
+    </button>
+  </div>
+))}
+
+<hr />
+
+<h3>Group Targeting</h3>
+
+<select
+  value={selectedGroup}
+  onChange={(e) => setSelectedGroup(e.target.value)}
+>
+  <option value="">Select Group</option>
+
+  {groups.map((group) => (
+    <option key={group.id} value={group.id}>
+      {group.name}
+    </option>
+  ))}
+</select>
+
+<button onClick={addGroup}>
+  Add
+</button>
+
+{flagGroups.map((group) => (
+  <div key={group.id}>
+    {group.group_name ?? group.group_id}
+  </div>
+))}
+
+<hr />
+
+<button
+  className="save-btn"
+  onClick={() => setShowReadModal(false)}
+>
+  Close
+</button>
             
-            <button className="save-btn" onClick={() => setShowReadModal(false)}>
-              <div className="targeting-placeholder">
-    <h3>Targeting Rules</h3>
-
-    <div className="placeholder-box">
-        <h4>🚀 Coming in Milestone 2</h4>
-
-    </div>
-</div>
-              Close
-            </button>
           </div>
         </div>
       )}

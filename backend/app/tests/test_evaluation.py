@@ -14,8 +14,8 @@ def test_flag_enabled():
         "/evaluate/",
         json={
             "flag_key": "AI chat",
-            "environment_id": 2,
-            "user_id": 0
+            "environment_id": 1,
+            "user_id": 94
         }
     )
 
@@ -29,7 +29,7 @@ def test_environment_flag():
         json={
             "flag_key": "new_login",
             "environment_id": 2,
-            "user_id": 0
+            "user_id": 49
         }
     )
 
@@ -43,7 +43,7 @@ def test_disabled_flag():
         json={
             "flag_key": "dark_mode",
             "environment_id": 3,
-            "user_id": 0
+            "user_id": 34
         }
     )
 
@@ -56,7 +56,7 @@ def test_empty_user_context():
         "/evaluate/",
         json={
             "flag_key": "AI chat",
-            "environment_id": 2
+            "environment_id": 1
         }
     )
 

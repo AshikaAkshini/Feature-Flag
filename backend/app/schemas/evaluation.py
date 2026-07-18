@@ -5,7 +5,7 @@ from pydantic import BaseModel
 class EvaluationRequest(BaseModel):
     flag_key: str
     environment_id: int
-    user_id: Optional[int] = None
+    user_id: Optional[str] = None
 
 
 class EvaluationResponse(BaseModel):
