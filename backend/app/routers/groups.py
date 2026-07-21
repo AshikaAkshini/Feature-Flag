@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.group import Group
 from app.schemas.group import GroupCreate, GroupResponse
+from fastapi import HTTPException, Depends
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/groups",
@@ -29,3 +31,14 @@ def create_group(group: GroupCreate, db: Session = Depends(get_db)):
 def get_groups(db: Session = Depends(get_db)):
     return db.query(Group).all()
 
+@router.delete("/{group_id}")
+def delete_group(group_id: int, db: Session = Depends(get_db)):
+    group = db.query(Group).filter(Group.id == group_id).first()
+
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    db.delete(group)
+    db.commit()
+
+    return {"message": "Group deleted successfully"}

@@ -58,5 +58,28 @@ def get_flag_groups_by_flag(
         .filter(FlagGroup.flag_id == flag_id)
         .all()
     )
-
     return flag_groups
+
+@router.delete("/{id}")
+def delete_flag_group(
+    id: int,
+    db: Session = Depends(get_db)
+):
+    flag_group = (
+        db.query(FlagGroup)
+        .filter(FlagGroup.id == id)
+        .first()
+    )
+
+    if not flag_group:
+        raise HTTPException(
+            status_code=404,
+            detail="Flag group not found"
+        )
+
+    db.delete(flag_group)
+    db.commit()
+
+    return {"message": "Group target deleted successfully"}
+
+    

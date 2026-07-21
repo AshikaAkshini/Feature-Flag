@@ -5,6 +5,7 @@ from app.models.flag import Flag
 from app.models.user_targeting_rule import UserTargetingRule
 from app.models.user_group_membership import UserGroupMembership
 from app.models.flag_group import FlagGroup
+from app.core.rollout import get_bucket
 
 
 def evaluate_flag(
@@ -28,14 +29,23 @@ def evaluate_flag(
             detail="Flag not found"
         )
 
-    if not flag.enabled:
-        return False
-
     user_id = user_context.get("user_id")
 
+    # Flag Disabled
+    if not flag.enabled:
+        return {
+        "flag_key": flag.flag_key,
+        "enabled": False,
+        "user_id": user_id,
+        "status": "Flag Disabled",
+        "bucket": None,
+        "rollout": flag.rollout_percentage,
+        "final_result": False,
+    }
+
+    # User Targeting
     if user_id is not None:
 
-        # Check direct user targeting
         rule = (
             db.query(UserTargetingRule)
             .filter(
@@ -46,9 +56,17 @@ def evaluate_flag(
         )
 
         if rule:
-            return True
+            return {
+        "flag_key": flag.flag_key,
+        "enabled": True,
+        "user_id": str(user_id),
+        "status": "Matched User Target",
+        "bucket": None,
+        "rollout": flag.rollout_percentage,
+        "final_result": True,
+    }
 
-        # Check group targeting
+        # Group Targeting
         memberships = (
             db.query(UserGroupMembership)
             .filter(
@@ -70,8 +88,47 @@ def evaluate_flag(
             )
 
             if group_rule:
-                return True
+                return {
+                    "flag_key": flag.flag_key,
+                    "enabled": flag.enabled,
+                    "user_id": user_id,
+                    "status": "Matched Group Target",
+                     "bucket": None,
+                    "rollout": flag.rollout_percentage,
+                    "final_result": True,
+                }
 
-        return flag.default_value
+        # Percentage Rollout
+        bucket = get_bucket(str(user_id), flag.flag_key)
 
-    return flag.enabled
+        if bucket < flag.rollout_percentage:
+            return {
+                "flag_key": flag.flag_key,
+                "enabled": flag.enabled,
+                "user_id": user_id,
+                "status": "Inside Rollout",
+                "bucket": bucket,
+                "rollout": flag.rollout_percentage,
+                "final_result": True,
+            }
+
+        return {
+            "flag_key": flag.flag_key,
+            "enabled": flag.enabled,
+            "user_id": user_id,
+            "status": "Outside Rollout",
+            "bucket": bucket,
+            "rollout": flag.rollout_percentage,
+            "final_result": flag.default_value,
+        }
+
+    # No user id
+    return {
+        "flag_key": flag.flag_key,
+        "enabled": flag.enabled,
+        "user_id": None,
+        "status": "No User ID",
+        "bucket": None,
+        "rollout": flag.rollout_percentage,
+        "final_result": flag.enabled,
+    }

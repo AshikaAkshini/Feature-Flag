@@ -10,16 +10,13 @@ class FlagBase(BaseModel):
     description: str | None = None
     owner_team: str | None = None
     enabled: bool = False
+    rollout_percentage: int = 100
 
 
 class FlagCreate(FlagBase):
     pass
-
-
 class FlagUpdate(FlagBase):
     pass
-
-
 class FlagResponse(FlagBase):
     id: int
     created_at: datetime

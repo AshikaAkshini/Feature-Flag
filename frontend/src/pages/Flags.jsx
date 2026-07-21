@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "./Flags.css";
+import { deleteFlagGroup } from "../api/GroupApi"; // use the correct relative path to GroupApi.js
 
 function Flags() {
   const [flags, setFlags] = useState([]);
@@ -17,17 +19,20 @@ function Flags() {
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState("");
   const [flagGroups, setFlagGroups] = useState([]);
-
+  const [originalKey, setOriginalKey] = useState("");
+  
   const loadGroups = async () => {
   try {
     const res = await fetch("http://127.0.0.1:8000/groups/");
     const data = await res.json();
+
+    console.log("Groups API:", data);
+
     setGroups(data);
   } catch (err) {
     console.log(err);
   }
 };
-
 
 const loadFlagGroups = async (flagId) => {
   try {
@@ -37,8 +42,9 @@ const loadFlagGroups = async (flagId) => {
 
     const data = await res.json();
 
-    setFlagGroups(data);
+    console.log("Flag Groups API:", data);
 
+    setFlagGroups(data);
   } catch (err) {
     console.log(err);
   }
@@ -52,8 +58,9 @@ const loadTargetUsers = async (flagId) => {
 
     const data = await res.json();
 
-    setTargetUsers(data);
+    console.log("Target Users API:", data);
 
+    setTargetUsers(data);
   } catch (err) {
     console.log(err);
   }
@@ -67,6 +74,7 @@ const loadTargetUsers = async (flagId) => {
     description: "",
     owner_team: "",
     enabled: true,
+    rollout_percentage: 100,
   });
 
   const loadFlags = () => {
@@ -111,6 +119,7 @@ fetch("http://127.0.0.1:8000/environments/")
         description: "",
         owner_team: "",
         enabled: true,
+        rollout_percentage:100,
       });
       loadFlags();
     } catch (err) {
@@ -118,8 +127,9 @@ fetch("http://127.0.0.1:8000/environments/")
     }
   };
 
+  
   const handleRead = (flag) => {
-  setSelectedFlag(flag);
+  setSelectedFlag({...flag,rollout_percentage: flag.rollout_percentage ?? 100,});
   setShowReadModal(true);
   setOpenDropdown(null);
 
@@ -183,6 +193,18 @@ const deleteTargetUser = async (id) => {
 
 };
 
+const deleteGroup = async (id) => {
+  try {
+    await fetch(`http://127.0.0.1:8000/flag-groups/${id}`, {
+      method: "DELETE",
+    });
+
+    loadFlagGroups(selectedFlag.id);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
 const addGroup = async () => {
 
   if (!selectedGroup) {
@@ -221,38 +243,62 @@ const addGroup = async () => {
   }
 };
 
-  const handleUpdate = (flag) => {
-  setSelectedFlag(flag);      // Store original flag
-  setNewFlag({ ...flag });    // Copy data for editing
+ const handleUpdate = (flag) => {
+  setOriginalKey(flag.flag_key);
+
+  setSelectedFlag({
+    ...flag,
+    rollout_percentage: flag.rollout_percentage ?? 100,
+  });
+
+  setNewFlag({
+    ...flag,
+    rollout_percentage: flag.rollout_percentage ?? 100,
+  });
+
+  // Load existing targeting data
+  loadTargetUsers(flag.id);
+  loadGroups();
+  loadFlagGroups(flag.id);
+  console.log("Groups:", groups);
+console.log("Flag Groups:", flagGroups);
+console.log("Target Users:", targetUsers);
   setShowUpdateModal(true);
   setOpenDropdown(null);
 };
 
   const updateFlag = async () => {
-    try {
-      const response = await fetch(
-        `http://127.0.0.1:8000/flags/${selectedFlag.flag_key}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(newFlag),
-        }
-      );
-
-      if (!response.ok) {
-        alert("Update failed");
-        return;
+  try {
+    const response = await fetch(
+      `http://127.0.0.1:8000/flags/${originalKey}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newFlag),
       }
+    );
 
-      setShowUpdateModal(false);
-      setOpenDropdown(null);
-      loadFlags();
-    } catch (err) {
-      console.error(err);
+    const data = await response.json();
+
+    console.log("Status:", response.status);
+    console.log("Response:", data);
+
+    if (!response.ok) {
+      alert(JSON.stringify(data));
+      return;
     }
-  };
+
+    setSelectedFlag(data);
+    setNewFlag(data);
+    setShowUpdateModal(false);
+    loadFlags();
+
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   const handleDelete = async (key) => {
     const confirmDelete = window.confirm(
@@ -394,9 +440,7 @@ const addGroup = async () => {
                   </div>
                 </td>
               </tr>
-            ))}
-        </tbody>
-      </table>
+            ))}</tbody></table>
 
       {/* CREATE MODAL */}
       {showCreateModal && (
@@ -417,10 +461,9 @@ const addGroup = async () => {
         description: "",
         owner_team: "",
         enabled: true,
+        rollout_percentage:100,
     });
-}}
-              >
-                ✕
+}}>   ✕
               </button>
             </div>
 
@@ -463,9 +506,7 @@ type:e.target.value
 >
 
 <option value="boolean">Boolean</option>
-
 <option value="string">String</option>
-
 <option value="number">Number</option>
 
 </select>
@@ -515,8 +556,28 @@ type:e.target.value
               />
               <span>{newFlag.enabled ? "Yes" : "No"}</span>
             </div>
+            
+            <label>Percentage Rollout</label>
+
+<input
+  type="range"
+  min="0"
+  max="100"
+  value={newFlag.rollout_percentage}
+  onChange={(e) =>
+    setNewFlag({
+      ...newFlag,
+      rollout_percentage: Number(e.target.value),
+    })
+  }
+/>
+
+<p>
+Enabled for {newFlag.rollout_percentage}% of users
+</p>
 
             <div className="modal-buttons">
+
               <button
                 className="cancel-btn"
                 onClick={() => {
@@ -529,11 +590,12 @@ type:e.target.value
                     description: "",
                     owner_team: "",
                     enabled: true,
+                    rollout_percentage:100,
+                    
                   });
-                }}
-              >
-                Cancel
-              </button>
+                }}>Cancel</button>
+
+                
               <button className="save-btn" onClick={createFlag}>
                 Create Flag
               </button>
@@ -559,7 +621,6 @@ type:e.target.value
           ? "Staging"
           : "Production"}
       </p>
-
       <p><strong>Type:</strong> {selectedFlag.type}</p>
       <p><strong>Default Value:</strong> {selectedFlag.default_value.toString()}</p>
       <p><strong>Description:</strong> {selectedFlag.description}</p>
@@ -572,108 +633,42 @@ type:e.target.value
 
 <h3>User Targeting Rules</h3>
 
-<div className="target-panel">
-
-<div className="target-input-row">
-
-  <input
-    type="text"
-    placeholder="Enter User ID"
-    value={newUserId}
-    onChange={(e) => setNewUserId(e.target.value)}
-  />
-
-  <button
-    className="add-user-btn"
-    onClick={addTargetUser}
-  >
-    Add
-  </button>
-
-</div>
-{targetUsers.length===0 ? (
-
-<p>No Target Users</p>) : 
-(targetUsers.map((user)=>(
-
-<div
-key={user.id}
-className="target-user-row"
->
-
-<span>{user.user_id}</span>
-
-<button
-className="remove-btn"
-onClick={()=>deleteTargetUser(user.id)}
->
-❌
-</button>
-</div>
-)))}
-</div><hr />
-<h3>Group Targeting</h3>
-
-<div className="target-panel">
-
-  <div className="target-input-row">
-
-    <select
-      value={selectedGroup}
-      onChange={(e) => setSelectedGroup(e.target.value)}
-    >
-
-      <option value="">Select Group</option>
-
-      {groups.map((group) => (
-
-        <option
-          key={group.id}
-          value={group.id}
-        >
-          {group.name}
-        </option>
-
-      ))}
-
-    </select>
-
-    <button
-      className="add-user-btn"
-      onClick={addGroup}
-    >
-      Add
-    </button>
-
-  </div>
-
-  {flagGroups.length === 0 ? (
-
-    <p>No Groups Assigned</p>
-
-  ) : (
-
-    flagGroups.map((group) => (
-
-      <div
-        key={group.id}
-        className="target-user-row"
-      >
-
-        <span>
-  {groups.find(g => g.id === group.group_id)?.name}
-</span>
-
-      </div>
-
-    ))
-
-  )}
-
-</div>
+{targetUsers.length === 0 ? (
+  <p>No Target Users</p>
+) : (
+  targetUsers.map(user => (
+    <div className="target-user-row" key={user.id}>
+      {user.user_id}
+    </div>
+  ))
+)}
 
 <hr />
+<h3>Group Targeting</h3>
 
+{flagGroups.length === 0 ? (
+  <p>No Groups Assigned</p>
+) : (
+  flagGroups.map(group => (
+    <div className="target-user-row" key={group.id}>
+      {groups.find(g => g.id === group.group_id)?.name}
+    </div>
+  ))
+)}
+
+<label>Percentage Rollout</label>
+
+<input
+    type="range"
+    min="0"
+    max="100"
+    value={selectedFlag.rollout_percentage ?? 100}
+    disabled
+/>
+<p>
+Enabled for {selectedFlag.rollout_percentage ?? 100}% of users
+</p>
+<hr />
 
       <button
     className="save-btn"
@@ -684,8 +679,7 @@ onClick={()=>deleteTargetUser(user.id)}
 </button>
 
     </div>
-  </div>
-)}
+  </div>)}
 
       {/* UPDATE MODAL */}
 {showUpdateModal && (
@@ -703,9 +697,7 @@ onClick={()=>deleteTargetUser(user.id)}
           setNewFlag({
             ...newFlag,
             flag_key: e.target.value,
-          })
-        }
-      />
+          })}/>
 
       {/* Environment */}
       <label>Environment</label>
@@ -756,8 +748,7 @@ onClick={()=>deleteTargetUser(user.id)}
 
   <span>
     {newFlag.default_value ? "True" : "False"}
-  </span>
-</div>
+  </span></div>
             
             <label>Description</label>
             <textarea
@@ -791,13 +782,122 @@ onClick={()=>deleteTargetUser(user.id)}
               <span>{newFlag.enabled ? "Yes" : "No"}</span>
             </div>
 
+        <h3>User Targeting Rules</h3>
+
+<div className="target-panel">
+
+  <div className="target-input-row">
+    <input
+      type="text"
+      placeholder="Enter User ID"
+      value={newUserId}
+      onChange={(e) => setNewUserId(e.target.value)}
+    />
+
+    <button
+      className="add-user-btn"
+      onClick={addTargetUser}
+    >
+      Add
+    </button>
+  </div>
+
+  {targetUsers.length === 0 ? (
+
+    <p>No Target Users</p>
+
+  ) : (
+
+    targetUsers.map((user) => (
+
+      <div
+        key={user.id}
+        className="target-user-row"
+      >
+        <span>{user.user_id}</span>
+        <button
+          className="remove-btn"
+          onClick={() => deleteTargetUser(user.id)}
+        >
+          ❌
+        </button>
+
+      </div>
+)))}</div>
+
+<hr />
+<h3>Group Targeting</h3>
+
+<div className="target-panel">
+
+  <div className="target-input-row">
+
+    <select
+      value={selectedGroup}
+      onChange={(e) => setSelectedGroup(e.target.value)}
+    >
+      <option value="">Select Group</option>
+
+      {groups.map((group) => (
+        <option
+          key={group.id}
+          value={group.id}
+        >
+          {group.name}
+        </option>
+      ))}
+
+    </select>
+    <button
+      className="add-user-btn"
+      onClick={addGroup}
+    >
+      Add
+    </button>
+
+  </div>
+
+  {flagGroups.length === 0 ? (
+
+    <p>No Groups Assigned</p>
+
+  ) : (
+
+    flagGroups.map((group) => (
+
+      <div
+        key={group.id}
+        className="target-user-row"
+      ><span>
+          {groups.find(g => g.id === group.group_id)?.name}
+        </span>
+
+        <button
+          className="remove-btn"
+          onClick={() => deleteGroup(group.id)}
+        >
+          ❌
+        </button>
+      </div>)))}</div>    
+            <label>Percentage Rollout</label>
+
+<input
+  type="range"
+  min="0"
+  max="100"
+  value={newFlag.rollout_percentage}
+  onChange={(e) =>
+    setNewFlag({
+      ...newFlag,
+      rollout_percentage: Number(e.target.value),
+    })
+  }
+/>
+
+<p>Enabled for {newFlag.rollout_percentage}% of users</p>
+
             <div className="modal-buttons">
-              <button
-                className="cancel-btn"
-                onClick={() => setShowUpdateModal(false)}
-              >
-                Cancel
-              </button>
+    <button className="cancel-btn"onClick={() => setShowUpdateModal(false)}>Cancel</button>
               <button className="save-btn" onClick={updateFlag}>
                 Update Flag
               </button>
@@ -806,6 +906,8 @@ onClick={()=>deleteTargetUser(user.id)}
         </div>
       )}
     </div>
+
+    
   );
 }
 

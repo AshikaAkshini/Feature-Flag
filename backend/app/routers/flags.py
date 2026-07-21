@@ -5,8 +5,11 @@ from app.database import get_db
 from app.schemas.flag import FlagCreate, FlagUpdate, FlagResponse
 from app.crud.flag import create_flag, get_flags, get_flag, update_flag
 from app.crud.flag import delete_flag
+from fastapi import HTTPException
+
 
 router = APIRouter(prefix="/flags", tags=["Flags"])
+
 
 
 @router.post("/", response_model=FlagResponse)
@@ -31,14 +34,15 @@ def read_one(key: str, db: Session = Depends(get_db)):
 
 @router.put("/{key}", response_model=FlagResponse)
 def update(key: str, flag: FlagUpdate, db: Session = Depends(get_db)):
+    print(flag)
+    print(flag.model_dump())
+
     updated = update_flag(db, key, flag)
 
     if not updated:
         raise HTTPException(status_code=404, detail="Flag not found")
 
     return updated
-
-from fastapi import HTTPException
 
 @router.delete("/{flag_key}")
 def remove_flag(flag_key: str, db: Session = Depends(get_db)):

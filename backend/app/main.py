@@ -24,6 +24,25 @@ from app.models.group import Group
 from app.models.flag_group import FlagGroup
 from app.routers.flag_groups import router as flag_groups_router
 
+from pydantic import BaseModel
+
+class FlagCreate(BaseModel):
+    flag_key: str
+    enabled: bool
+    rollout_percentage: int = 100
+
+class FlagUpdate(BaseModel):
+    rollout_percentage: int
+
+class FlagResponse(BaseModel):
+    id: int
+    flag_key: str
+    enabled: bool
+    rollout_percentage: int
+
+    class Config:
+        from_attributes = True
+
 
 app = FastAPI()
 

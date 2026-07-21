@@ -32,6 +32,11 @@ def evaluate(
     )
 
     return EvaluationResponse(
-        flag_key=request.flag_key,
-        enabled=result,
-    )
+    flag_key=result["flag_key"],
+    enabled=result["enabled"],
+    user_id=result["user_id"],
+    status=result["status"],
+    bucket=result["bucket"],
+    rollout=result["rollout"],
+    final_result=result["final_result"],
+)

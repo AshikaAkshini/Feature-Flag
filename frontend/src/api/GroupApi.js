@@ -24,3 +24,11 @@ export async function assignGroup(flagId, groupId) {
 
   return response.json();
 }
+
+export async function deleteFlagGroup(id) {
+  const response = await fetch(`${API_URL}/flag-groups/${id}`, {
+    method: "DELETE",
+  });
+
+  return response.json();
+}
